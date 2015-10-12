@@ -5,6 +5,7 @@
 */
 (function(window,$){
 	var Swipe = function(opts){
+		console.log('nimei');
 		this.dom = opts.dom;//dom节点
 		this.canAuto = opts.canAuto;//是否支持自动滑动
 		this.prevIndex = opts.index ? opts.index : 0;//滑动画面索引
@@ -67,12 +68,14 @@
 			return children;
 		},
 		swipe:function(){
+			console.log('swipe');
 			var self = this;
 			var hashTouch = !!(('ontouchstart' in window) || window.DocumentTouch && document instanceof window.DocumentTouch);
 			var startEvt = hashTouch?'touchstart':'mousedown';
 	        var moveEvt = hashTouch?'touchmove':'mousemove';
 	        var endEvt = hashTouch?'touchend':'mouseup';
 			var _start = function(evt){
+				self.direction = 'h';
 				self.startX = hashTouch?evt.targetTouches[0].pageX:evt.pageX;
 				self.startY = hashTouch?evt.targetTouches[0].pageY:evt.pageY;
 				self.endTime = new Date().getTime();
@@ -83,10 +86,9 @@
 				var x = hashTouch?evt.targetTouches[0].pageX:evt.pageX,y = hashTouch?evt.targetTouches[0].pageY:evt.pageY,distY = y - self.startY,
 				absDistY = Math.abs(distY),distX = x - self.startX,absDistX = Math.abs(distX),timestamp = new Date().getTime();
 				var touchAngel = Math.atan2(absDistY,absDistX)*180/Math.PI;
-				if(touchAngel > 45){
+				console.log('touchAngel:'+touchAngel);
+				if(touchAngel > 45 && absDistY > absDistX){
 					self.direction = 'v';
-				}else{
-					self.direction = 'h';
 				}
 				if(self.direction == 'h'){
 					evt.preventDefault();
@@ -102,10 +104,8 @@
 				self.endX = hashTouch?evt.changedTouches[0].pageX:evt.pageX;
 				var y = hashTouch?evt.changedTouches[0].pageY:evt.pageY;
 				var distX = self.endX - self.startX,absDistX = Math.abs(distX);
-				if(self.direction == 'h' && absDistX > 50){
+				if(self.direction == 'h'){
 					self.slider(distX);
-				}else{
-					self.slider(0);
 				}
 			};
 			self.dom.addEventListener(startEvt,_start,false);
@@ -113,8 +113,10 @@
 			self.dom.addEventListener(endEvt,_end,false);
 		},
 		slider:function(distX){
+			console.log("distX:"+distX);
 			var distX = distX;
 			var self = this;
+			var prevIndex = 0 , activeIndex = 0 , nextIndex = 0;
 			if(Math.abs(distX) > 50){
 				if(distX < 0){
 					if(self.sliderIndex < 0){
@@ -127,15 +129,14 @@
 						if(self.sliderIndex < 0){
 							self.sliderIndex = self.maxIndex;
 						}
-						var prevIndex = self.sliderIndex, activeIndex = self.sliderIndex + 1;
+						prevIndex = self.sliderIndex, activeIndex = self.sliderIndex + 1;
 						if(activeIndex > self.maxIndex){
 							activeIndex = 0;
 						}
-						var nextIndex = activeIndex + 1;
+						nextIndex = activeIndex + 1;
 						if(nextIndex > self.maxIndex){
 							nextIndex = 0;
 						}
-						console.log(prevIndex,activeIndex,nextIndex);
 						self.addAnimation(self.children[prevIndex],0-self.w,true);
 						self.addAnimation(self.children[activeIndex],0,true);
 						self.addAnimation(self.children[nextIndex],self.w,false);
@@ -146,6 +147,7 @@
 						}else{
 							distX = self.offsetDist - self.w;
 						}
+						activeIndex = self.sliderIndex + 1 > self.maxIndex ? self.maxIndex : self.sliderIndex + 1;
 					}
 					self.sliderIndex++;
 				}else{
@@ -156,15 +158,14 @@
 						if(self.sliderIndex < 0){
 							self.sliderIndex = self.maxIndex;
 						}
-						var prevIndex = self.sliderIndex,activeIndex = prevIndex - 1;
+						prevIndex = self.sliderIndex,activeIndex = prevIndex - 1;
 						if(activeIndex < 0){
 							activeIndex = self.maxIndex;
 						}
-						var nextIndex = activeIndex - 1;
+						nextIndex = activeIndex - 1;
 						if(nextIndex < 0){
 							nextIndex = self.maxIndex;
 						}
-
 						self.addAnimation(self.children[prevIndex],self.w,true);
 						self.addAnimation(self.children[activeIndex],0,true);
 						self.addAnimation(self.children[nextIndex],0-self.w,false);
@@ -175,16 +176,17 @@
 						}else{
 							distX = self.offsetDist + self.w;
 						}
+						activeIndex = self.sliderIndex - 1 < 0 ? 0 : self.sliderIndex - 1;
 					}
 					self.sliderIndex--;
 				}
 			}else{
 				if(self.loop){
-					self.addAnimation(self.children[self.prevIndex],0,false);
+					self.addAnimation(self.children[self.prevIndex],0,true);
 					if(distX < 0){
-						self.addAnimation(self.children[self.activeIndex],self.w,false);
+						self.addAnimation(self.children[self.activeIndex],self.w,true);
 					}else{
-						self.addAnimation(self.children[self.activeIndex],-self.w,false);
+						self.addAnimation(self.children[self.activeIndex],-self.w,true);
 					}
 				}else{
 					distX = self.offsetDist;
@@ -195,7 +197,7 @@
 				self.addAnimation(self.dom,distX,true);
 			}
 			if(self.callBack){
-				self.callBack(self.sliderIndex);
+				self.callBack(activeIndex);
 			}
 			if(self.canAuto && !self.interval){
 				self.autoPlay();

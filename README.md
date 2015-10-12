@@ -1,5 +1,5 @@
 # swipe
-简单的轮播组件，dom不需要做特殊处理
+移动端轮播组件，简单易用，dom不需要做特殊处理
 #使用方法
 new Swipe({
 	"dom":document.getElementById("swipe-wrapper"),

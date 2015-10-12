@@ -31,7 +31,10 @@
 			}
 			if(self.loop){
 				if(self.maxIndex < 2){
-					self.children.concat([self.children[0].cloneNode(true),self.children[1].cloneNode(true)]);
+					var d1 = self.children[0].cloneNode(true),d2 = self.children[1].cloneNode(true);
+					self.children = self.children.concat([d1,d2]);
+					self.dom.appendChild(d1);
+					self.dom.appendChild(d2);
 					self.maxIndex = self.children.length - 1;
 				}
 				for(var i = 0 ,l = self.maxIndex;i < l;i++){
